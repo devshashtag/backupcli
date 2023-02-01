@@ -105,7 +105,7 @@ function loadPaths(){
         let loaded++
       else
         # non-existing path
-        message "${red}[Error ] ==> $yellow$line ${red}path dosenot exist!"
+        message "${red}[Error ] ==> $yellow$line ${red}path doesn't exist!"
 
         let error++
       fi
@@ -116,7 +116,7 @@ function loadPaths(){
 
 function exportBackup() {
   local backupPaths="$1"
-  local backupDir="$(join_path "${options[backup_dir]}" "${options[backup_format]}")"
+  local backupDir="$(join_path "${options[backup_export]}" "${options[backup_format]}")"
   local loaded=0
   local error=0
 
@@ -145,7 +145,7 @@ function exportBackup() {
 
     # create nested backup dirs if not exist
     if grep -q false <<< $(isExist "$exportPath"); then
-      cmdColor="$black"
+      cmdColor="$white"
 
       cmd "mkdir -p '$exportPath'"
     fi
@@ -158,19 +158,21 @@ function exportBackup() {
 function importBackup() {
   local backupDir="$1"
   local backupDirs="$(find "$backupDir" -mindepth 1 -maxdepth 1 -exec basename {} \;)"
-  local dest="/"
-  local IFS=$'\n'
+  local dest="${options[backup_import]}"
 
-  savedColor="$cmdColor"
+  # display help when no arguments passed
+  if grep -q false <<< $(isExist "$dest"); then
+    grep -q false <<< "$(YN "${cyan}do you want to create $yellow$dest$cyan directory")" && return
+
+    cmd "mkdir -p $dest"
+  fi
+
   cmdColor="$yellow"
-
   for path in ${backupDirs[@]};do
     local src="$(join_path "$backupDir" "$path")"
 
     copy "$src" "$dest"
   done
-
-  cmdColor="$savedColor"
 }
 
 # arch manager help
@@ -190,8 +192,8 @@ function backupCliHelp() {
 
   message "${red}backup cli {norm}commands:
 
-  $arg -i $sep_arg --import $param'backup path directory' $sep import backups from exported backups dir
-  $arg -e $sep_arg --export $param'backup paths file'     $sep export backups from config-paths file
+  $arg -i $sep_arg --import $param'backup directory'  $sep import backups from a backup directory
+  $arg -e $sep_arg --export $param'backup-paths file' $sep export backups from config-paths file
   $arg -h $sep_arg --help $sep backup cli help\n" | column -Lt -s $'\t'
 
   exit
@@ -207,62 +209,61 @@ trap "newline; exit" INT
 
 # backup options
 declare -A options=(
-    [backup_paths]='paths/system'
-    [backup_dir]='backup'
-    [backup_format]="${USER}-$(date +%Y-%m-%d--%T|tr ':' '-')"
+  # export options
+  #----------------------------
+
+  # path to backups
+  [backup_paths]='paths/system'
+
+  # where to export backups
+  [backup_export]='backup'
+
+  # backup root directory format {backup_export}/format 
+  # [default: username-year-month-day--hour-minute-second]
+  [backup_format]="${USER}-$(date +%Y-%m-%d--%T|tr ':' '-')"
+
+  # import options
+  #----------------------------
+  # where to import backups [default: root]
+  [backup_import]="/"
 )
 
-# parse arguments
-while [[ $# -gt 0 ]]; do
-  case $1 in
-    # export backups
-    -e | --export)
-      backup_path="$2"
+case $1 in
+  # export backups
+  -e | --export)
+    backup_path="$2"
 
-      # use user path 
-      grep -q true <<< $(isExist "$backup_path") && {
-        exportBackup "$backup_path"
-        break
-      }
+    # use user path 
+    if grep -q true <<< $(isExist "$backup_path"); then
+      exportBackup "$backup_path"
+      break
+    fi
 
-      # if user set a path and its doesn't exist display error
-      [[ ! -z "$backup_path" ]] && {
-        backupCliHelp "$yellow${backup_path} ${red}backup file doesn't exist{norm}!"
-      }
+    # if user set a path and its doesn't exist display error
+    if [[ ! -z "$backup_path" ]]; then
+      backupCliHelp "$yellow${backup_path} ${red}backup file doesn't exist{norm}!"
+    fi
 
-      # use default path if user doesn't set a path
-      # and if default path is exist
-      grep -q true <<< "$(isExist "${options[backup_paths]}")" && {
-        exportBackup "${options[backup_paths]}"
-      }
-    ;;
+    # use default path if user doesn't set a path
+    # and if default path is exist
+    if grep -q true <<< $(isExist "${options[backup_paths]}"); then
+      exportBackup "${options[backup_paths]}"
+    fi
+  ;;
 
-    # # backup import
-    # -bi | --backup-import)
-    #   # use default directory
-    #   [[ -e "${options[backup_dir]}" ]] && {
-    #       section="importBackup '${options[backup_dir]}'"
+  # backup import
+  -i | --import)
+    import_dir="$2"
 
-    #     shift
-    #     continue
-    #   }
+    # display help when no arguments passed
+    if grep -q false <<< $(isExist "$import_dir"); then
+      message "$yellow$import_dir ${red}backup directory does not exist{norm}!\n"
+      backupCliHelp
+    fi
 
-    #         # display help when no arguments passed
-    #         ls "$2"
-    #         grep -q false <<< $(isExist "$2") && {
-    #           message "$yellow$2 ${important}backup path directory not exist{norm}!\n"
-    #                       archManagerHelp
-    #                     }
+    importBackup "$import_dir"
+  ;;
 
-    #                     section="importBackup '$2'"
-
-    #                     shift
-    #                     ;;
-
-    #     # other options
-    -h | --help | *)   backupCliHelp ;;
-  esac
-
-  shift # next argument
-done
-
+  # other options
+  -h | --help | *)   backupCliHelp ;;
+esac
