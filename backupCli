@@ -1,0 +1,268 @@
+#!/usr/bin/env bash
+
+# colors
+function getColor() { 
+  echo -e "\e[$1m"
+}
+
+# 30-40  -> dark colors
+# 90-100 -> light colors
+black="$(getColor 90)"
+red="$(getColor 91)"
+green="$(getColor 92)"
+yellow="$(getColor 93)"
+blue="$(getColor 94)"
+magenta="$(getColor 95)"
+cyan="$(getColor 96)"
+white="$(getColor 97)"
+
+cls="$(echo -e "\e[m")"
+
+cmdColor="$white"
+
+# display a message
+function message() {
+  local msg="$(sed "s/{norm}/$black/g" <<<"$1")"
+
+  echo -e "$black$msg$cls"
+}
+
+# print a new line
+function newline() { 
+  echo
+}
+
+# new line separator
+function newline_sep() {
+  message "$black$1-------------------------------------------------------------"
+}
+
+# run command
+function cmd() {
+  local command="$@"
+
+  message "\n$cyan==> $cmdColor$command"
+
+  # run command
+  eval "$command"
+}
+
+# read Yes/no
+function YN() {
+  read -p "$black$(sed "s/{norm}/$black/g" <<<"$1") ${green}Y$black/${red}n$black > $blue" req
+  echo -ne "$black"
+
+  # default is false
+  [[ "$req" =~ ^[yY] ]] && echo -n true || echo -n false
+}
+
+
+# copy a file or folder
+function copy() {
+  local src="$1"
+  local dest="$2"
+
+  # change command color
+  cmdColor="$yellow"
+
+  # run command
+  cmd "cp -ra '$src' '$dest'"
+}
+
+# join two path
+join_path() { 
+  tr -s '/' <<< "${1:+$1/}$2" 
+}
+
+# convert a path to absolute path
+function absPath() {
+  sed "s|^~|$HOME|" <<< "$1" 
+}
+
+function isExist(){
+  [[ -e "$(absPath "$1")" ]] && echo -n true || echo -n false 
+}
+
+# load backup paths from config file
+function loadPaths(){
+    local backupPaths="$1"
+
+    local paths="$(sed 's/#.*$//g' "$backupPaths" | # remove comments
+                   sed '/^\s*$/d')"  # remove empty lines
+
+    loadedPaths=""
+
+    # check paths
+    while IFS= read -r line; do
+      local path="$(absPath "$line")"
+
+      # check if paths exist
+      if grep -q true <<< $(isExist "$path"); then
+        # existing path
+        message "${green}[Loaded]$red ==> {norm}$line"
+
+        loadedPaths="$loadedPaths$path,"
+        let loaded++
+      else
+        # non-existing path
+        message "${red}[Error ] ==> $yellow$line ${red}path dosenot exist!"
+
+        let error++
+      fi
+    done <<< "$paths"
+
+    loadedPaths="${loadedPaths%,}"
+}
+
+function exportBackup() {
+  local backupPaths="$1"
+  local backupDir="$(join_path "${options[backup_dir]}" "${options[backup_format]}")"
+  local loaded=0
+  local error=0
+
+  # load paths
+  loadPaths "$backupPaths"
+
+  local paths="$loadedPaths"
+
+  # export info
+  newline_sep
+  message "destination path: $cyan$backupDir"
+  message "not exists paths: $red$error"
+  message "loaded paths: $green$loaded"
+  newline
+
+  grep -q false <<< "$(YN "${cyan}do you want to export loaded paths")" && return
+  newline_sep
+
+  # export configs
+  cmd "mkdir -p '$backupDir'"
+
+  local IFS=','
+
+  for src in ${paths[@]};do
+    local exportPath="$(join_path "$backupDir" "$(dirname $src)")"
+
+    # create nested backup dirs if not exist
+    if grep -q false <<< $(isExist "$exportPath"); then
+      cmdColor="$black"
+
+      cmd "mkdir -p '$exportPath'"
+    fi
+
+    # export
+    copy "$src" "$exportPath"
+  done
+}
+
+function importBackup() {
+  local backupDir="$1"
+  local backupDirs="$(find "$backupDir" -mindepth 1 -maxdepth 1 -exec basename {} \;)"
+  local dest="/"
+  local IFS=$'\n'
+
+  savedColor="$cmdColor"
+  cmdColor="$yellow"
+
+  for path in ${backupDirs[@]};do
+    local src="$(join_path "$backupDir" "$path")"
+
+    copy "$src" "$dest"
+  done
+
+  cmdColor="$savedColor"
+}
+
+# arch manager help
+function backupCliHelp() {
+  newline_sep
+
+  # display errors
+  if [[ ! -z "$1" ]]; then
+    message "$1\n"
+  fi
+
+  arg="$cyan"
+  param="$green"
+  sep_arg="$red | $arg"
+  desc="$black"
+  sep="\t$red -> $desc"
+
+  message "${red}backup cli {norm}commands:
+
+  $arg -i $sep_arg --import $param'backup path directory' $sep import backups from exported backups dir
+  $arg -e $sep_arg --export $param'backup paths file'     $sep export backups from config-paths file
+  $arg -h $sep_arg --help $sep backup cli help\n" | column -Lt -s $'\t'
+
+  exit
+}
+
+# print new line at end
+trap "newline_sep" EXIT
+trap "newline; exit" INT
+
+
+# display help when no arguments passed
+[[ $# -eq 0 ]] && backupCliHelp
+
+# backup options
+declare -A options=(
+    [backup_paths]='paths/system'
+    [backup_dir]='backup'
+    [backup_format]="${USER}-$(date +%Y-%m-%d--%T|tr ':' '-')"
+)
+
+# parse arguments
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    # export backups
+    -e | --export)
+      backup_path="$2"
+
+      # use user path 
+      grep -q true <<< $(isExist "$backup_path") && {
+        exportBackup "$backup_path"
+        break
+      }
+
+      # if user set a path and its doesn't exist display error
+      [[ ! -z "$backup_path" ]] && {
+        backupCliHelp "$yellow${backup_path} ${red}backup file doesn't exist{norm}!"
+      }
+
+      # use default path if user doesn't set a path
+      # and if default path is exist
+      grep -q true <<< "$(isExist "${options[backup_paths]}")" && {
+        exportBackup "${options[backup_paths]}"
+      }
+    ;;
+
+    # # backup import
+    # -bi | --backup-import)
+    #   # use default directory
+    #   [[ -e "${options[backup_dir]}" ]] && {
+    #       section="importBackup '${options[backup_dir]}'"
+
+    #     shift
+    #     continue
+    #   }
+
+    #         # display help when no arguments passed
+    #         ls "$2"
+    #         grep -q false <<< $(isExist "$2") && {
+    #           message "$yellow$2 ${important}backup path directory not exist{norm}!\n"
+    #                       archManagerHelp
+    #                     }
+
+    #                     section="importBackup '$2'"
+
+    #                     shift
+    #                     ;;
+
+    #     # other options
+    -h | --help | *)   backupCliHelp ;;
+  esac
+
+  shift # next argument
+done
+
