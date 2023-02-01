@@ -25,9 +25,7 @@ the syntax is simple, only put *file, folder URLs* there:
 
 # how to config
 
-`config` file is in root folder
-
-there are some options you can change
+open `config` file and read comments:
 
 ```
 declare -A options=(
@@ -63,9 +61,11 @@ declare -A options=(
 # usage
 
 **options**:
+
 ![options](https://github.com/devshashtag/backupcli/blob/main/screenshots/options.jpg?raw=true)
 
 **export**:
+
 ![options](https://github.com/devshashtag/backupcli/blob/main/screenshots/export.jpg?raw=true)
 
 ```
@@ -146,6 +146,7 @@ do you want to export loaded paths Y/n > y
 ```
 
 **restore**:
+
 for testing restore function set:
 
 ```
