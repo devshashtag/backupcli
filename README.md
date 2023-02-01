@@ -72,8 +72,6 @@ declare -A options=(
 do you want to export loaded paths Y/n > y
 -------------------------------------------------------------
 
-==> mkdir -p 'backup/devs-2023-02-01--16-38-33'
-
 ==> mkdir -p 'backup/devs-2023-02-01--16-38-33/home/devs'
 
 ==> cp -ra '/home/devs/.anydesk' 'backup/devs-2023-02-01--16-38-33/home/devs'

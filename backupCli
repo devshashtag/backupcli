@@ -139,8 +139,6 @@ function exportBackup() {
   newline_sep
 
   # export configs
-  cmd "mkdir -p '$backupDir'"
-
   local IFS=','
 
   for src in ${paths[@]};do
