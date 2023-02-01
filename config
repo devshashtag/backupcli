@@ -1,0 +1,28 @@
+declare -A options=(
+  # export options
+  #----------------------------
+  #
+  # path to files and folders
+  [backup_paths]='paths/system'
+
+  # where to export backups
+  [backup_export]='backup'
+
+  # backup root-directory format {backup_export}/format 
+  # [default: username-year-month-day--hour-minute-second]
+  [backup_format]="${USER}-$(date +%Y-%m-%d--%T|tr ':' '-')"
+
+
+  # restore options
+  #----------------------------
+
+  # where to restore backups on [default: root]
+  # backupcli restores the nested folders from root to you'r file, folders
+  [backup_restore]="fake-root"
+  
+  # for example if a file with:
+  # /home/devs/.bashrc
+  # and backup_restore is "/"
+  # backupcli create nest folders under "/"
+  # and if its exist uses it
+)

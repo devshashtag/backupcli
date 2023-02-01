@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# load configs
+source config
+
 # colors
 function getColor() { 
   echo -e "\e[$1m"
@@ -203,33 +206,10 @@ function backupCliHelp() {
 trap "newline_sep" EXIT
 trap "newline; exit" INT
 
-
 # display help when no arguments passed
 [[ $# -eq 0 ]] && backupCliHelp
 
-# backup options
-declare -A options=(
-  # export options
-  #----------------------------
-  #
-  # path to files and folders
-  [backup_paths]='paths/system'
-
-  # where to export backups
-  [backup_export]='backup'
-
-  # backup root-directory format {backup_export}/format 
-  # [default: username-year-month-day--hour-minute-second]
-  [backup_format]="${USER}-$(date +%Y-%m-%d--%T|tr ':' '-')"
-
-
-  # restore options
-  #----------------------------
-
-  # where to restore backups on [default: root]
-  [backup_restore]="/"
-)
-
+# arg-parser
 case $1 in
   # export backups
   -e | --export)
@@ -238,7 +218,7 @@ case $1 in
     # use user path 
     if grep -q true <<< $(isExist "$backup_path"); then
       exportBackup "$backup_path"
-      break
+      exit
     fi
 
     # if user set a path and its doesn't exist display error
@@ -253,7 +233,7 @@ case $1 in
     fi
   ;;
 
-  # backup restore
+  # restore backups
   -r | --restore)
     import_dir="$2"
 
