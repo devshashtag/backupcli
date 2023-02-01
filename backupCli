@@ -155,10 +155,10 @@ function exportBackup() {
   done
 }
 
-function importBackup() {
+function restoreBackup() {
   local backupDir="$1"
   local backupDirs="$(find "$backupDir" -mindepth 1 -maxdepth 1 -exec basename {} \;)"
-  local dest="${options[backup_import]}"
+  local dest="${options[backup_restore]}"
 
   # display help when no arguments passed
   if grep -q false <<< $(isExist "$dest"); then
@@ -192,8 +192,8 @@ function backupCliHelp() {
 
   message "${red}backup cli {norm}commands:
 
-  $arg -i $sep_arg --import $param'backup directory'  $sep import backups from a backup directory
   $arg -e $sep_arg --export $param'backup-paths file' $sep export backups from config-paths file
+  $arg -r $sep_arg --restore $param'backup directory'  $sep restore backups from a backup directory
   $arg -h $sep_arg --help $sep backup cli help\n" | column -Lt -s $'\t'
 
   exit
@@ -211,21 +211,23 @@ trap "newline; exit" INT
 declare -A options=(
   # export options
   #----------------------------
-
-  # path to backups
+  #
+  # path to files and folders
   [backup_paths]='paths/system'
 
   # where to export backups
   [backup_export]='backup'
 
-  # backup root directory format {backup_export}/format 
+  # backup root-directory format {backup_export}/format 
   # [default: username-year-month-day--hour-minute-second]
   [backup_format]="${USER}-$(date +%Y-%m-%d--%T|tr ':' '-')"
 
-  # import options
+
+  # restore options
   #----------------------------
-  # where to import backups [default: root]
-  [backup_import]="/"
+
+  # where to restore backups on [default: root]
+  [backup_restore]="/"
 )
 
 case $1 in
@@ -251,8 +253,8 @@ case $1 in
     fi
   ;;
 
-  # backup import
-  -i | --import)
+  # backup restore
+  -r | --restore)
     import_dir="$2"
 
     # display help when no arguments passed
@@ -261,7 +263,7 @@ case $1 in
       backupCliHelp
     fi
 
-    importBackup "$import_dir"
+    restoreBackup "$import_dir"
   ;;
 
   # other options
