@@ -1,35 +1,51 @@
 # HOME
-~/.dmrc
-~/.ssh
-~/.gnupg
-~/.bashrc
+~/.anydesk
+~/.mozilla
 ~/.bash_history
 ~/.bash_profile
+~/.bashrc
+~/.dmrc
 ~/.gitconfig
-~/.mozilla
-~/.vscode-oss
+~/.gnupg
+~/.ssh
+
 ~/.ssr/settings.conf
 
 #> .config
+~/.config/btop
 ~/.config/fish
-~/.config/nvim
+~/.config/flameshot
+~/.config/chromium
 ~/.config/mpv
-~/.config/viewnior
-~/.config/Crow Translate
+~/.config/nvim
+~/.config/copyq/copyq.conf
+~/.config/viewnior/viewnior.conf
 
-~/.config/xfce4
-~/.config/Thunar
 ~/.config/gtk-2.0
 ~/.config/gtk-3.0
+
+~/.config/Thunar
+~/.config/xfce4
+
 ~/.config/mimeapps.list
 
 #> .local
-~/.local/share/nvim
 ~/.local/share/themes
 ~/.local/share/fish/fish_history
-~/.local/share/TelegramDesktop
 
 # etc
-/etc/tor/torrc
 /etc/NetworkManager/NetworkManager.conf
-/etc/resolv.conf
+/etc/lightdm/lightdm-gtk-greeter.conf
+
+
+# ~/.config/awesome
+# ~/.config/rofi
+# ~/.config/picom
+# ~/.config/ranger
+# ~/.config/Crow Translate
+
+#~/.local/share/TelegramDesktop
+
+# /etc/tor/torrc
+# /etc/resolv.conf
+
