@@ -62,11 +62,11 @@ declare -A options=(
 
 **options**:
 
-![options](https://github.com/devshashtag/backupcli/blob/main/screenshots/options.jpg?raw=true)
+![options](screenshots/options.jpg?raw=true)
 
 **export**:
 
-![options](https://github.com/devshashtag/backupcli/blob/main/screenshots/export.jpg?raw=true)
+![options](screenshots/export.jpg?raw=true)
 
 ```
 do you want to export loaded paths Y/n > y
@@ -153,4 +153,4 @@ for testing restore function set:
 [backup_restore]="fake-root"
 ```
 
-![options](https://github.com/devshashtag/backupcli/blob/main/screenshots/restore.jpg?raw=true)
+![options](screenshots/restore.jpg?raw=true)
