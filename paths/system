@@ -1,21 +1,22 @@
 # HOME
-~/.anydesk
-~/.mozilla
 ~/.bash_history
 ~/.bash_profile
 ~/.bashrc
 ~/.dmrc
+
 ~/.gitconfig
 ~/.gnupg
 ~/.ssh
 
 ~/.ssr/settings.conf
+~/.thunderbird
+~/.mozilla
+~/.anydesk
 
 #> .config
 ~/.config/btop
 ~/.config/fish
 ~/.config/flameshot
-~/.config/chromium
 ~/.config/mpv
 ~/.config/nvim
 ~/.config/copyq/copyq.conf
@@ -43,8 +44,9 @@
 # ~/.config/picom
 # ~/.config/ranger
 # ~/.config/Crow Translate
+# ~/.config/chromium
 
-#~/.local/share/TelegramDesktop
+# ~/.local/share/TelegramDesktop
 
 # /etc/tor/torrc
 # /etc/resolv.conf
